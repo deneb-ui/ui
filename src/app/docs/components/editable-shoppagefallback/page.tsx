@@ -1,0 +1,73 @@
+import React from 'react';
+
+const EditableShopPageFallbackDocsPage = () => {
+  return (
+    <div className="docs-page">
+      <h1 className="component-title">EditableShopPageFallback</h1>
+      <p className="component-description">
+        The <code>EditableShopPageFallback</code> component provides a fallback UI for a shop page, allowing users to edit the title, description, search label, and search placeholder dynamically. It integrates editable text fields for a seamless content management experience.
+      </p>
+      
+      <h2 className="props-title">Props</h2>
+      <table className="props-table">
+        <thead>
+          <tr>
+            <th>Prop</th>
+            <th>Type</th>
+            <th>Default</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>itemPath</td>
+            <td>string</td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <td>siteData</td>
+            <td>any</td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <td>imageFallback</td>
+            <td>string</td>
+            <td>'/placeholder.svg'</td>
+          </tr>
+          <tr>
+            <td>as</td>
+            <td>React.ElementType</td>
+            <td>'div'</td>
+          </tr>
+          <tr>
+            <td>className</td>
+            <td>string</td>
+            <td>''</td>
+          </tr>
+          <tr>
+            <td>style</td>
+            <td>React.CSSProperties</td>
+            <td>-</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2 className="usage-title">Usage Example</h2>
+      <pre className="usage-example">
+        {`<EditableShopPageFallback
+  itemPath="shop"
+  siteData={siteData}
+/>`}
+      </pre>
+
+      <h2 className="editable-fields-title">Editable Field Paths</h2>
+      <ul className="editable-fields-list">
+        <li>*.shopAll</li>
+        <li>*.exploreFullRangePerformanceRunners</li>
+        <li>*.searchLabel</li>
+        <li>*.searchProductsPlaceholder</li>
+      </ul>
+    </div>
+  );
+};
+
+export default EditableShopPageFallbackDocsPage;
