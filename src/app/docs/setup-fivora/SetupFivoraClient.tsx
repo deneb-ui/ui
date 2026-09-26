@@ -34,6 +34,8 @@ export function SetupFivoraClient() {
 
   const SAFE_AI_MASTER_PROMPT = `IMPORTANT — this rule supersedes any older dynamic product-route example below:
 
+- Catalog price amounts MUST be JSON numbers (for example, \`price: 1000\`) and editorSchema price fields MUST use \`type: "number"\`.
+- Keep currency as separate text (for example, \`currency: "LKR"\` or \`currencySymbol: "Rs."\`). NEVER store \`"Rs. 1000"\` in the numeric price field.
 - Static-export storefronts MUST export src/app/products/detail/page.tsx.
 - That page should render <PlatformProductDetail /> from @deneb-ui/ui.
 - Product cards MUST use platformProductDetailHref(product.id), which produces /products/detail/?id=PRODUCT_ID.
@@ -366,6 +368,14 @@ ${AI_MASTER_PROMPT}`;
               code={`{\n  "project": {\n    "id": "demo-store",\n    "name": "Nova Storefront",\n    "businessEmail": "merchant@example.com"\n  },\n  "requirements": {\n    "requiredPages": ["home", "products", "about", "contact"]\n  },\n  "content": {\n    "common": {\n      "websiteTitle": "Nova Store",\n      "shortDescription": "Engineered for modern living.",\n      "business": {\n        "phone": "+1 (555) 482-9012",\n        "whatsapp": "15554829012",\n        "email": "hello@novastore.com",\n        "location": {\n          "address": "742 Evergreen Celestial Way",\n          "city": "San Francisco",\n          "country": "USA"\n        }\n      }\n    },\n    "home": {\n      "heroBadge": "New Arrivals",\n      "heroTitle": "Engineered for Modern Web Commerce",\n      "heroSubtitle": "Everything you need to craft high-converting storefronts.",\n      "heroCtaText": "Explore Products"\n    }\n  }\n}`}
               language="json"
             />
+            <div className="rounded-xl border border-emerald-400/30 bg-emerald-400/10 p-4 text-xs sm:text-sm text-emerald-100 leading-relaxed">
+              <strong>Commerce price contract:</strong> store the amount as a JSON number,
+              such as <code className="font-mono">price: 1000</code>, and declare its
+              editor field as <code className="font-mono">type: &quot;number&quot;</code>.
+              Keep <code className="font-mono">currency: &quot;LKR&quot;</code> or{' '}
+              <code className="font-mono">currencySymbol: &quot;Rs.&quot;</code> as separate
+              text. This preserves numeric price filtering, sorting, and totals.
+            </div>
           </div>
 
           {/* STEP 5 */}
