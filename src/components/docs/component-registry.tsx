@@ -21,6 +21,11 @@ import {
   TestimonialSection,
   Map as DenebMap,
   THEME_PRESETS,
+  Icon as EditableDenebIcon,
+  UniversalCard,
+  VehicleCard,
+  SiteDataProvider,
+  DenebImage,
 } from '@/components/deneb-ui';
 import { isDarkColor, getAutoContrastTextColor } from '@deneb-ui/core';
 import { ComponentDocPageProps } from './ComponentDocPage';
@@ -73,6 +78,78 @@ function InteractiveButtonDemo() {
         Periwinkle Outline
       </button>
     </div>
+  );
+}
+
+function InteractiveEditableIconDemo() {
+  const icons = ['car', 'book', 'utensils', 'dumbbell', 'home', 'sparkles'];
+
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-5 p-4">
+      {icons.map((name) => (
+        <div key={name} className="flex flex-col items-center gap-2 text-xs text-slate-600 dark:text-[#CBD5E1]">
+          <span className="rounded-xl border border-slate-200 bg-white p-3 text-indigo-600 shadow-sm dark:border-[#23283B] dark:bg-[#121625] dark:text-[#A5B4FC]">
+            <EditableDenebIcon name={name} size={26} fieldPath={`demo.icons.${name}`} />
+          </span>
+          <code>{name}</code>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function InteractiveUniversalCardDemo() {
+  return (
+    <div className="w-full max-w-sm">
+      <UniversalCard
+        itemPath="featuredItems.signatureBook"
+        image={{ src: '/products/vanta-aero-x.jpg', alt: 'Featured item', aspectRatio: '16/10' }}
+        badge="Bestseller"
+        overline="Collector edition"
+        title="Designing Universal Storefronts"
+        subtitle="A practical field guide"
+        description="One editable card contract for books, menus, services, property, memberships, and equipment."
+        specs={[
+          { key: 'format', label: 'Format', value: 'Hardcover', iconName: 'book' },
+          { key: 'pages', label: 'Pages', value: '248' },
+        ]}
+        price="LKR 8,900"
+        originalPrice="LKR 10,500"
+        cta={{ label: 'View details', href: '#universal-card' }}
+      />
+    </div>
+  );
+}
+
+function InteractiveVehicleCardDemo() {
+  const siteData = {
+    content: {
+      cards: {
+        vehicles: {
+          'demo-vehicle': {
+            name: '2024 Deneb Aurora GT',
+            meta: '2024 · Brand New',
+            details: 'Performance AWD',
+            badge: 'Available',
+            mileage: '120 km',
+            fuel: 'Electric',
+            transmission: 'Automatic',
+            price: 'LKR 24,900,000',
+          },
+        },
+      },
+    },
+  };
+
+  return (
+    <SiteDataProvider initialSiteData={siteData}>
+      <VehicleCard
+        vehicleId="demo-vehicle"
+        href="#vehicle-card"
+        imageSlot={<DenebImage src="/products/vanta-stealth-pro.jpg" alt="Demo vehicle" className="h-44 w-full object-cover" />}
+        className="w-full max-w-sm overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-md dark:border-[#23283B] dark:bg-[#0F1424] dark:text-white [&>div]:space-y-2 [&>div]:p-5 [&_a]:text-lg [&_a]:font-bold [&_p]:text-sm [&_ul]:flex [&_ul]:flex-wrap [&_ul]:gap-3 [&_ul]:text-xs"
+      />
+    </SiteDataProvider>
   );
 }
 
@@ -2423,6 +2500,110 @@ export default function Demo() {
       },
     ],
     prevPage: { title: 'Grid & Box', href: '/docs/components/grid' },
+    nextPage: { title: 'ContactActions', href: '/docs/components/contact-actions' },
+  },
+
+  'editable-icon': {
+    title: 'Icon / EditableIcon',
+    description: 'Built-in SVG icon library with live Fivora field binding, accessible titles, custom icon maps, and a safe fallback glyph.',
+    category: 'Core Primitives',
+    badge: 'New',
+    previewComponent: <InteractiveEditableIconDemo />,
+    previewCode: `import { Icon } from "@deneb-ui/ui";
+
+export default function FeatureIcon() {
+  return <Icon name="car" fieldPath="home.features[0].icon" size={28} title="Vehicle" />;
+}`,
+    usageCode: `import { Icon, EditableIcon } from "@deneb-ui/ui";
+
+<Icon name="book" fieldPath="home.features[0].icon" size={24} />
+<EditableIcon name="sparkles" fallback="circle" aria-hidden="true" />`,
+    props: [
+      { name: 'name', type: 'string', defaultValue: '"circle"', description: 'Built-in glyph name, such as car, book, fuel, settings, or sparkles.' },
+      { name: 'fieldPath', type: 'string', description: 'Content path used by Fivora to edit the selected icon.' },
+      { name: 'size', type: 'number | string', defaultValue: '16', description: 'Rendered icon width and height.' },
+      { name: 'strokeWidth', type: 'number | string', defaultValue: '2', description: 'Stroke width for outline icons.' },
+      { name: 'fallback', type: 'string', defaultValue: '"circle"', description: 'Glyph used when name is unknown.' },
+      { name: 'customIcon', type: 'ReactNode', description: 'Custom icon content that replaces the built-in glyph.' },
+      { name: 'iconMap', type: 'Record<string, ReactNode>', description: 'Project-specific icons merged with the built-in dictionary.' },
+    ],
+    prevPage: { title: 'Image', href: '/docs/components/image' },
+    nextPage: { title: 'UniversalCard', href: '/docs/components/universal-card' },
+  },
+
+  'universal-card': {
+    title: 'UniversalCard',
+    description: 'A visual-editing-ready listing card for retail, books, menus, real estate, services, memberships, equipment, and other structured entities.',
+    category: 'Storefront Sections',
+    badge: 'New',
+    previewComponent: <InteractiveUniversalCardDemo />,
+    previewCode: `import { UniversalCard } from "@deneb-ui/ui";
+
+<UniversalCard
+  itemPath="featuredItems.signatureBook"
+  image={{ src: "/book.jpg", alt: "Signature book" }}
+  badge="Bestseller"
+  overline="Collector edition"
+  title="Designing Universal Storefronts"
+  subtitle="A practical field guide"
+  specs={[{ key: "format", label: "Format", value: "Hardcover", iconName: "book" }]}
+  price="LKR 8,900"
+  cta={{ label: "View details", href: "/books/signature" }}
+/>`,
+    usageCode: `import { UniversalCard } from "@deneb-ui/ui";
+
+// itemPath lets live site data override the supplied fallback content.
+<UniversalCard
+  itemPath={\`services[\${index}]\`}
+  title={service.title}
+  description={service.description}
+  price={service.priceLabel}
+  layout="grid"
+/>`,
+    props: [
+      { name: 'itemPath', type: 'string', description: 'Root content path inherited by editable title, image, badge, price, specs, and CTA fields.' },
+      { name: 'title', type: 'string', description: 'Primary entity title and fallback value.', required: true },
+      { name: 'image', type: 'string | UniversalCardImageProps', description: 'Primary editable image configuration.' },
+      { name: 'specs', type: 'UniversalCardSpec[]', defaultValue: '[]', description: 'Dynamic labeled attributes with optional editable icons.' },
+      { name: 'cta', type: 'UniversalCardCTA', description: 'Primary action label, URL, callback, variant, and optional field path.' },
+      { name: 'layout', type: '"grid" | "list" | "compact" | "horizontal"', defaultValue: '"grid"', description: 'Card orientation.' },
+      { name: 'actionsSlot', type: 'ReactNode', description: 'Slot for save, compare, share, or secondary controls.' },
+    ],
+    prevPage: { title: 'Icon / EditableIcon', href: '/docs/components/editable-icon' },
+    nextPage: { title: 'VehicleCard', href: '/docs/components/vehicle-card' },
+  },
+
+  'vehicle-card': {
+    title: 'VehicleCard',
+    description: 'Automotive inventory card bound to cards.vehicles.<id>, with editable specs and companion brand, body-type, and showroom card primitives.',
+    category: 'Storefront Sections',
+    badge: 'New',
+    previewComponent: <InteractiveVehicleCardDemo />,
+    previewCode: `import { SiteDataProvider, VehicleCard, DenebImage } from "@deneb-ui/ui";
+
+<SiteDataProvider initialSiteData={siteData}>
+  <VehicleCard
+    vehicleId="aurora-gt"
+    href="/vehicles/aurora-gt"
+    imageSlot={<DenebImage src="/vehicles/aurora-gt.jpg" alt="Aurora GT" />}
+  />
+</SiteDataProvider>`,
+    usageCode: `import {
+  VehicleCard,
+  EditableBrandCard,
+  EditableBodyTypeCard,
+  EditableShowroomCard,
+} from "@deneb-ui/ui";
+
+<VehicleCard vehicleId={vehicle.id} href={\`/vehicles/\${vehicle.slug}\`} />`,
+    props: [
+      { name: 'vehicleId', type: 'string', description: 'Key below content.cards.vehicles and the basis of every preview field path.', required: true },
+      { name: 'href', type: 'string', description: 'Optional vehicle detail link.' },
+      { name: 'imageSlot', type: 'ReactNode', description: 'Template-owned image presentation slot.' },
+      { name: 'actionsSlot', type: 'ReactNode', description: 'Template-owned inquiry, compare, save, or purchase actions.' },
+      { name: 'layout', type: '"grid" | "list"', defaultValue: '"grid"', description: 'Semantic layout orientation exposed through data-layout.' },
+    ],
+    prevPage: { title: 'UniversalCard', href: '/docs/components/universal-card' },
     nextPage: { title: 'ContactActions', href: '/docs/components/contact-actions' },
   },
 

@@ -13,6 +13,7 @@ import {
   type SiteData,
 } from './SiteDataProvider';
 import { withBasePath } from './utils';
+import { resolveCatalogImages } from './utils/catalogMedia';
 
 const DEFAULT_QUERY_PARAM = 'id';
 const DEFAULT_DETAIL_ROUTE = '/products/detail/';
@@ -173,15 +174,7 @@ function normalizeProductForDetail(
     undefined;
   const price =
     mergedProduct.price ?? (mergedProduct as any).cost ?? (mergedProduct as any).amount ?? (mergedProduct as any).productPrice;
-  const images = Array.isArray(mergedProduct.gallery)
-    ? mergedProduct.gallery
-    : Array.isArray(mergedProduct.images)
-      ? (mergedProduct.images as string[])
-      : Array.isArray(mergedProduct.additionalImages)
-        ? (mergedProduct.additionalImages as unknown[]).filter(
-            (value): value is string => typeof value === 'string' && Boolean(value.trim()),
-          )
-        : undefined;
+  const images = resolveCatalogImages(mergedProduct);
   const compareAtPrice =
     mergedProduct.compareAtPrice ?? mergedProduct.originalPrice;
   const shop = isRecord(siteData.shop) ? siteData.shop : {};
@@ -208,7 +201,7 @@ function normalizeProductForDetail(
       ? { featuredImage: image, imageUrl: image, image }
       : {}),
     ...(price !== undefined ? { price } : {}),
-    ...(images ? { gallery: images, images } : {}),
+    ...(images.length > 0 ? { gallery: images, images } : {}),
     ...(compareAtPrice !== undefined
       ? { compareAtPrice, originalPrice: compareAtPrice }
       : {}),

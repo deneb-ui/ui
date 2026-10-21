@@ -28,6 +28,7 @@ export const SEARCH_INDEX: SearchItem[] = [
   { title: 'Dialog / Modal', category: 'Components', slug: '/docs/components/dialog', description: 'Accessible modal dialog with backdrop blur and smooth transitions.' },
   { title: 'Grid & Box', category: 'Components', slug: '/docs/components/grid', description: 'Responsive layout primitives for fast page composition.' },
   { title: 'Image', category: 'Components', slug: '/docs/components/image', description: 'Optimized responsive image with fallback support.' },
+  { title: 'Icon / EditableIcon', category: 'Components', slug: '/docs/components/editable-icon', description: 'Editable built-in SVG icon library with custom maps and safe fallbacks.' },
 
   // Smart Commerce Actions
   { title: 'ContactActions', category: 'Components', slug: '/docs/components/contact-actions', description: 'Smart multi-channel contact bar (Phone, WhatsApp, Email).' },
@@ -60,6 +61,8 @@ export const SEARCH_INDEX: SearchItem[] = [
   { title: 'ProductQuickView', category: 'Components', slug: '/docs/components/product-quickview', description: 'Instant lightbox modal product inspection with quantity counter and live editing.' },
   { title: 'ProductGrid', category: 'Components', slug: '/docs/components/product-grid', description: 'Responsive commerce product showcase grid with category filter tabs and quick-view hook.' },
   { title: 'ProductCard', category: 'Components', slug: '/docs/components/product-card', description: 'E-commerce product display with dual pricing (fixed vs range), interactive color swatches, badge, and quick buy.' },
+  { title: 'UniversalCard', category: 'Components', slug: '/docs/components/universal-card', description: 'Multi-industry editable listing card for products, services, menus, books, property, and equipment.' },
+  { title: 'VehicleCard', category: 'Components', slug: '/docs/components/vehicle-card', description: 'Automotive inventory card with editable vehicle specs and companion listing primitives.' },
   { title: 'Section (EditableSection)', category: 'Components', slug: '/docs/components/section', description: 'Semantic section container with 1-click move up/down section reordering (CSS order), instant centering, and safe hiding (display: none).' },
   { title: 'EditableSection', category: 'Components', slug: '/docs/components/editable-section', description: 'Reorderable, centerable, hideable section container with strict data-design-section and data-section-id visual builder contract compliance.' },
   { title: 'CustomerReviews', category: 'Components', slug: '/docs/components/customer-reviews', description: 'Social proof review showcase with aggregate rating and verified buyer authentication.' },

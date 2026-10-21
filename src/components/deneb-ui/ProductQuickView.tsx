@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { withBasePath } from './utils';
 import { platformProductDetailHref } from './PlatformProductDetail';
+import { resolveCatalogImages } from './utils/catalogMedia';
 
 export interface ProductQuickViewItem {
   id: string;
@@ -12,6 +13,8 @@ export interface ProductQuickViewItem {
   description?: string;
   imageUrl?: string;
   gallery?: string[];
+  images?: string[];
+  additionalImages?: string[];
   inStock?: boolean;
   isAvailable?: boolean;
   rating?: number;
@@ -63,7 +66,7 @@ export function ProductQuickView({
   useEffect(() => {
     if (product) {
       setQuantity(1);
-      setSelectedImage(product.imageUrl || (product.gallery && product.gallery[0]) || '');
+      setSelectedImage(resolveCatalogImages(product)[0] || '');
     }
   }, [product]);
 
@@ -88,7 +91,7 @@ export function ProductQuickView({
     return null;
   }
 
-  const images = product.gallery && product.gallery.length > 0 ? product.gallery : [product.imageUrl || ''];
+  const images = resolveCatalogImages(product);
   const currency = product.currency || '$';
   const isAvailable = product.isAvailable !== false && product.inStock !== false;
 

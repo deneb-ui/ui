@@ -3,13 +3,15 @@
 /**
  * EditableUniversalCard — DENEB UI Framework
  *
- * Universal, multi-industry listing card for all commerce and business templates:
+ * Universal, multi-industry listing renderer for non-catalog entities. Fivora
+ * products and services should use EditableProductCard/EditableServiceCard so
+ * their backend catalog behavior is preserved:
  * - 🚗 Automotive & Equipment: Make/model, year & condition, mileage, fuel, gearbox, price
  * - 📚 Bookshops & Publishers: Cover photo, book title, author, published year, pages, price
  * - 🏋️ Gyms & Fitness: Membership tier, duration, meal plan, 24/7 access, trainer, price
- * - 🍽️ Restaurants & Menus: Dish photo, title, dietary tags, ingredients, prep time, price
+ * - 🍽️ Editorial Menus: Dish photo, title, dietary tags, ingredients, prep time, price
  * - 🏠 Real Estate & Rentals: Property image, location, beds, baths, sqft, price
- * - 💼 Services & Agencies: Service title, duration, deliverable checklist, pricing
+ * - 💼 Agency Portfolios: Offering title, duration, deliverable checklist, pricing
  *
  * Designed with strict editability architecture:
  * 1. Automatically resolves fields from `useSiteData()` via `itemPath` or explicit field paths.

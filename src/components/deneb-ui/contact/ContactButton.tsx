@@ -10,6 +10,7 @@ export interface ContactButtonProps extends React.AnchorHTMLAttributes<HTMLAncho
   value?: string | null;
   label?: React.ReactNode;
   fieldPath?: string;
+  labelFieldPath?: string;
   targetPage?: string;
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'whatsapp';
   size?: 'sm' | 'md' | 'lg';
@@ -25,6 +26,7 @@ export function ContactButton({
   label,
   children,
   fieldPath,
+  labelFieldPath,
   targetPage,
   variant,
   size = 'md',
@@ -148,10 +150,22 @@ export function ContactButton({
     ...variantStyles[resolvedVariant],
   };
 
+  const textContent = typeof children === 'string' ? children : (typeof label === 'string' ? label : '');
+  const digitsOnly = (str: string) => str.replace(/\D/g, '');
+  const matchesValue = Boolean(
+    value &&
+    textContent &&
+    (digitsOnly(textContent) === digitsOnly(String(value)) || textContent.trim().toLowerCase() === String(value).trim().toLowerCase())
+  );
+  const staticMarker = (rest as Record<string, any>)['data-preview-static'] || `${type}-action`;
+  const staticLabelMarker = (rest as Record<string, any>)['data-preview-static'] || `${type}-label`;
+
   const buttonElement = (
     <a
       href={resolvedHref}
-      data-preview-field-path={fieldPath}
+      {...(fieldPath && (matchesValue || labelFieldPath)
+        ? { 'data-preview-field-path': fieldPath }
+        : { 'data-preview-static': staticMarker })}
       target={shouldOpenNewTab ? '_blank' : undefined}
       rel={shouldOpenNewTab ? 'noopener noreferrer' : undefined}
       className={`deneb-contact-btn deneb-contact-${type} ${className}`.trim()}
@@ -159,7 +173,13 @@ export function ContactButton({
       {...rest}
     >
       {icon !== undefined ? icon : defaultIcon}
-      {children || label}
+      {labelFieldPath ? (
+        <span data-preview-field-path={labelFieldPath}>{children || label}</span>
+      ) : fieldPath && matchesValue ? (
+        children || label
+      ) : (
+        <span data-preview-static={staticLabelMarker}>{children || label}</span>
+      )}
     </a>
   );
 

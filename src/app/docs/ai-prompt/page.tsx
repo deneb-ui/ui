@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 import { AiPromptClient } from './AiPromptClient';
 import { SITE_CONFIG } from '@/lib/site-config';
 
@@ -35,6 +37,9 @@ export const metadata: Metadata = {
   },
 };
 
-export default function AiPromptPage() {
-  return <AiPromptClient />;
+export default async function AiPromptPage() {
+  const promptPath = path.join(process.cwd(), 'prompts', 'fivora-template-master-prompt.md');
+  const masterPrompt = await readFile(promptPath, 'utf8');
+
+  return <AiPromptClient masterPrompt={masterPrompt} />;
 }

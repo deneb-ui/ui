@@ -24,6 +24,7 @@ import type { ProductItem } from './EditableProductCard';
 import type { ServiceItem } from './EditableServiceCard';
 import { ThemeStyles, type TemplateTheme } from './ThemeStyles';
 import { withBasePath, resolveAsset } from './utils';
+import { resolveCatalogImages } from './utils/catalogMedia';
 
 export const DENEB_PREVIEW_DATA_MESSAGE = 'DENEB_PREVIEW_SITE_DATA';
 export const PREVIEW_DATA_MESSAGE = 'FIVORA_PREVIEW_SITE_DATA';
@@ -730,22 +731,46 @@ export function SiteDataProvider<T extends SiteData = SiteData>({
     if (typeof document === "undefined") return;
     const sd = siteData as unknown as GenericRecord;
     const common = isRecord(sd?.content?.common) ? (sd.content.common as GenericRecord) : null;
-    const shop = isRecord(sd?.shop) ? (sd.shop as GenericRecord) : null;
+    const hasKeys = (o: unknown) => isRecord(o) && Object.keys(o).length > 0;
+    const shop = hasKeys(sd?.shop) ? (sd.shop as GenericRecord) : (hasKeys(sd?.merchant) ? (sd.merchant as GenericRecord) : (isRecord(sd?.shop) ? (sd.shop as GenericRecord) : null));
     const site = isRecord(sd?.site) ? (sd.site as GenericRecord) : null;
+    const merchant = isRecord(sd?.merchant) ? (sd.merchant as GenericRecord) : null;
+    const seo = isRecord(sd?.seo) ? (sd.seo as GenericRecord) : null;
+    const seoSite = isRecord(seo?.site) ? (seo.site as GenericRecord) : null;
+
+    const isPlaceholderTitle = (val?: unknown) =>
+      typeof val !== "string" ||
+      !val.trim() ||
+      /^(demo|template|storefront|website|my shop|coffee)$/i.test(val.trim());
+
+    const realShopName =
+      (typeof shop?.businessName === "string" && shop.businessName.trim()) ||
+      (typeof merchant?.businessName === "string" && merchant.businessName.trim()) ||
+      "";
 
     const candidateTitle =
-      (typeof common?.websiteTitle === "string" && common.websiteTitle.trim()) ||
-      (typeof shop?.businessName === "string" && shop.businessName.trim()) ||
-      (typeof site?.name === "string" && site.name.trim());
+      realShopName ||
+      (!isPlaceholderTitle(common?.websiteTitle) ? (common?.websiteTitle as string).trim() : "") ||
+      (typeof site?.name === "string" && site.name.trim()) ||
+      (typeof common?.websiteTitle === "string" ? common.websiteTitle.trim() : "");
 
     if (candidateTitle) {
       document.title = candidateTitle;
     }
 
+    const isPlaceholderLogo = (url?: unknown) =>
+      typeof url !== "string" ||
+      !url.trim() ||
+      url === "/fivora-logo.png" ||
+      url.includes("fivora-logo") ||
+      url === "/favicon.ico";
+
     const candidateIcon =
-      (typeof common?.logoUrl === "string" && common.logoUrl.trim()) ||
-      (typeof shop?.logoUrl === "string" && shop.logoUrl.trim()) ||
-      (typeof site?.logoUrl === "string" && site.logoUrl.trim());
+      (!isPlaceholderLogo(seoSite?.favicon) ? (seoSite?.favicon as string).trim() : "") ||
+      (!isPlaceholderLogo(shop?.logoUrl) ? (shop?.logoUrl as string).trim() : "") ||
+      (!isPlaceholderLogo(merchant?.logoUrl) ? (merchant?.logoUrl as string).trim() : "") ||
+      (!isPlaceholderLogo(site?.logoUrl) ? (site?.logoUrl as string).trim() : "") ||
+      (!isPlaceholderLogo(common?.logoUrl) ? (common?.logoUrl as string).trim() : "");
 
     if (candidateIcon) {
       let link: HTMLLinkElement | null = document.querySelector("link[rel*='icon']");
@@ -1031,7 +1056,9 @@ export function normalizeProductItem(p: unknown): ProductItem {
     p.src ??
     p.productImage ??
     (Array.isArray(p.gallery) ? p.gallery[0] : undefined) ??
-    (Array.isArray(p.images) ? p.images[0] : undefined);
+    (Array.isArray(p.images) ? p.images[0] : undefined) ??
+    (Array.isArray(p.additionalImages) ? p.additionalImages[0] : undefined);
+  const catalogImages = resolveCatalogImages(p);
 
   const badgeCandidate = p.badge ?? p.tag ?? p.label ?? p.badgeText ?? p.chip;
   const descCandidate = p.description ?? p.desc ?? p.details ?? p.shortDescription ?? p.subtitle;
@@ -1077,6 +1104,13 @@ export function normalizeProductItem(p: unknown): ProductItem {
           productImage: imageCandidate as string,
         }
       : {}),
+    ...(catalogImages.length > 0
+      ? {
+          gallery: catalogImages,
+          images: catalogImages,
+          additionalImages: catalogImages.slice(1),
+        }
+      : {}),
     ...(badgeCandidate !== undefined
       ? {
           badge: badgeCandidate as string,
@@ -1095,6 +1129,8 @@ export function normalizeProductItem(p: unknown): ProductItem {
 
 /**
  * Universal Service Normalizer
+ * Ensures every service object has both canonical and alias keys simultaneously populated
+ * with clean numbers and resolved image URLs, matching the product normalizer's robustness.
  */
 export function normalizeServiceItem(s: unknown): ServiceItem {
   if (!isRecord(s)) return s as ServiceItem;
@@ -1103,7 +1139,73 @@ export function normalizeServiceItem(s: unknown): ServiceItem {
   const nameCandidate = s.name ?? s.title ?? s.serviceName ?? s.heading;
   const titleCandidate = s.title ?? s.name ?? s.serviceName ?? s.heading;
   const descCandidate = s.description ?? s.desc ?? s.details ?? s.shortDescription;
-  const imageCandidate = s.imageUrl ?? s.image ?? s.photo ?? s.thumbnail ?? s.picture;
+  const imageCandidate =
+    s.imageUrl ??
+    s.image ??
+    s.photo ??
+    s.thumbnail ??
+    s.picture ??
+    (Array.isArray(s.gallery) ? s.gallery[0] : undefined) ??
+    (Array.isArray(s.images) ? s.images[0] : undefined) ??
+    (Array.isArray(s.additionalImages) ? s.additionalImages[0] : undefined);
+  const catalogImages = resolveCatalogImages(s);
+
+  // Price normalization — parse string prices to clean numbers, support aliases
+  const rawPrice =
+    s.price !== undefined
+      ? s.price
+      : s.cost !== undefined
+        ? s.cost
+        : s.amount !== undefined
+          ? s.amount
+          : s.rate !== undefined
+            ? s.rate
+            : s.serviceFee !== undefined
+              ? s.serviceFee
+              : s.servicePrice !== undefined
+                ? s.servicePrice
+                : customData.price !== undefined
+                  ? customData.price
+                  : undefined;
+  let numPrice: number | string | undefined = rawPrice as any;
+  if (typeof rawPrice === "string" && rawPrice.trim()) {
+    const isRangeStr = rawPrice.includes("-") || rawPrice.includes("–") || rawPrice.includes("—") || /\bto\b/i.test(rawPrice);
+    if (!isRangeStr) {
+      const match = rawPrice.match(/-?\d+(?:,\d{3})*(?:\.\d+)?|-?\d+(?:\.\d+)?/);
+      if (match) {
+        const parsed = parseFloat(match[0].replace(/,/g, ""));
+        if (!isNaN(parsed) && Number.isFinite(parsed)) {
+          numPrice = parsed;
+        }
+      }
+    }
+  }
+
+  // Compare/original price normalization for services
+  const rawCompare =
+    s.compareAtPrice !== undefined
+      ? s.compareAtPrice
+      : s.originalPrice !== undefined
+        ? s.originalPrice
+        : s.oldPrice !== undefined
+          ? s.oldPrice
+          : s.regularPrice !== undefined
+            ? s.regularPrice
+            : customData.compareAtPrice !== undefined
+              ? customData.compareAtPrice
+              : undefined;
+  let numCompare: number | string | undefined = rawCompare as any;
+  if (typeof rawCompare === "string" && rawCompare.trim()) {
+    const match = rawCompare.match(/-?\d+(?:,\d{3})*(?:\.\d+)?|-?\d+(?:\.\d+)?/);
+    if (match) {
+      const parsed = parseFloat(match[0].replace(/,/g, ""));
+      if (!isNaN(parsed) && Number.isFinite(parsed)) {
+        numCompare = parsed;
+      }
+    }
+  }
+
+  const priceLabelCandidate = s.priceLabel ?? customData.priceLabel;
 
   return {
     ...customData,
@@ -1112,6 +1214,30 @@ export function normalizeServiceItem(s: unknown): ServiceItem {
     title: titleCandidate as string | undefined,
     ...(descCandidate !== undefined ? { description: descCandidate as string, desc: descCandidate as string, details: descCandidate as string } : {}),
     ...(imageCandidate !== undefined ? { imageUrl: imageCandidate as string, image: imageCandidate as string, photo: imageCandidate as string } : {}),
+    ...(catalogImages.length > 0
+      ? {
+          gallery: catalogImages,
+          images: catalogImages,
+          additionalImages: catalogImages.slice(1),
+        }
+      : {}),
+    ...(numPrice !== undefined
+      ? {
+          price: numPrice,
+          cost: numPrice,
+          amount: numPrice,
+          rate: numPrice,
+          serviceFee: numPrice,
+          servicePrice: numPrice,
+        }
+      : {}),
+    ...(numCompare !== undefined
+      ? {
+          compareAtPrice: numCompare,
+          originalPrice: numCompare,
+        }
+      : {}),
+    ...(priceLabelCandidate !== undefined ? { priceLabel: priceLabelCandidate as string } : {}),
   } as ServiceItem;
 }
 
@@ -1204,6 +1330,8 @@ export function useSiteCatalog() {
  */
 export function useShop(fallback: GenericRecord = {}): GenericRecord {
   const siteData = useSiteData();
+  if (isRecord(siteData?.shop) && Object.keys(siteData.shop).length > 0) return siteData.shop;
+  if (isRecord(siteData?.merchant) && Object.keys(siteData.merchant).length > 0) return siteData.merchant;
   if (isRecord(siteData?.shop)) return siteData.shop;
   if (isRecord(siteData?.merchant)) return siteData.merchant;
   return fallback;
@@ -1440,4 +1568,105 @@ export function useSyncedBranding(fallback: Partial<SyncedBranding> = {}): Synce
     slogan: brandSubtext,
     faviconUrl,
   };
+}
+
+/**
+ * Hook to retrieve the live store currency code (e.g. "LKR", "USD", "EUR").
+ * Auto-hydrates from the merchant portal's shop profile.
+ * Hierarchy: shop.currency → content.common.currency → merchant.currency → fallback.
+ */
+export function useCurrency(fallback: string = 'LKR'): string {
+  const siteData = useSiteData();
+  const content = isRecord(siteData?.content) ? siteData.content : null;
+  const common = isRecord(content?.common) ? content.common : {};
+  const shop = useShop();
+
+  return (
+    (typeof shop.currency === 'string' && shop.currency.trim()) ||
+    (typeof common.currency === 'string' && common.currency.trim()) ||
+    (typeof shop.currencyCode === 'string' && shop.currencyCode.trim()) ||
+    (typeof common.currencyCode === 'string' && common.currencyCode.trim()) ||
+    fallback
+  );
+}
+
+export interface SocialLinksMap {
+  facebook: string;
+  instagram: string;
+  tiktok: string;
+  youtube: string;
+  linkedin: string;
+  twitter: string;
+  website: string;
+  [key: string]: string;
+}
+
+/**
+ * Hook to retrieve the live social links map from the merchant profile.
+ * Auto-hydrates from the shop owner's Fivora Portal social configuration.
+ * Returns a map like { facebook: "https://...", instagram: "https://...", ... }.
+ */
+export function useSocial(fallback: Partial<SocialLinksMap> = {}): SocialLinksMap {
+  const siteData = useSiteData();
+  const content = isRecord(siteData?.content) ? siteData.content : null;
+  const common = isRecord(content?.common) ? content.common : {};
+  const shop = useShop();
+
+  const shopSocial = isRecord(shop.socialLinks) ? shop.socialLinks : (isRecord(shop.social) ? shop.social : {});
+  const commonSocial = isRecord(common.socialLinks) ? common.socialLinks : (isRecord(common.social) ? common.social : {});
+
+  const extractString = (key: string): string => {
+    const candidates = [
+      shopSocial[key],
+      commonSocial[key],
+      shop[key],
+      common[key],
+      (fallback as Record<string, string>)[key],
+    ];
+    for (const candidate of candidates) {
+      if (typeof candidate === 'string' && candidate.trim()) {
+        return candidate.trim();
+      }
+    }
+    return '';
+  };
+
+  return {
+    facebook: extractString('facebook') || extractString('facebookUrl'),
+    instagram: extractString('instagram') || extractString('instagramUrl'),
+    tiktok: extractString('tiktok') || extractString('tiktokUrl'),
+    youtube: extractString('youtube') || extractString('youtubeUrl'),
+    linkedin: extractString('linkedin') || extractString('linkedinUrl'),
+    twitter: extractString('twitter') || extractString('twitterUrl') || extractString('x'),
+    website: extractString('website') || extractString('websiteUrl'),
+    ...Object.fromEntries(
+      Object.entries({ ...fallback, ...commonSocial, ...shopSocial })
+        .filter(([, v]) => typeof v === 'string' && v.trim())
+        .map(([k, v]) => [k, String(v).trim()])
+    ),
+  };
+}
+
+/**
+ * Hook to retrieve the live shop front / cover / banner image URL.
+ * Auto-hydrates from the merchant portal's shop profile.
+ * Hierarchy: shop.coverImage → shop.shopImage → shop.bannerImage → shop.heroImage → content.common.shopImage → fallback.
+ */
+export function useShopImage(fallback: string = ''): string {
+  const siteData = useSiteData();
+  const content = isRecord(siteData?.content) ? siteData.content : null;
+  const common = isRecord(content?.common) ? content.common : {};
+  const shop = useShop();
+
+  return (
+    (typeof shop.coverImage === 'string' && shop.coverImage.trim()) ||
+    (typeof shop.shopImage === 'string' && shop.shopImage.trim()) ||
+    (typeof shop.bannerImage === 'string' && shop.bannerImage.trim()) ||
+    (typeof shop.heroImage === 'string' && shop.heroImage.trim()) ||
+    (typeof shop.shopFrontImage === 'string' && shop.shopFrontImage.trim()) ||
+    (typeof common.shopImage === 'string' && common.shopImage.trim()) ||
+    (typeof common.coverImage === 'string' && common.coverImage.trim()) ||
+    (typeof common.bannerImage === 'string' && common.bannerImage.trim()) ||
+    fallback
+  );
 }

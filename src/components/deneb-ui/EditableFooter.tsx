@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useSiteData } from './SiteDataProvider';
 import { EditableText } from './EditableText';
+import { EditableIcon } from './EditableIcon';
 
 export interface FooterLink {
   id: string;
@@ -393,20 +394,18 @@ export function EditableFooter({
 
           {/* Column 2: Navigation Links (AUTO-SYNCED WITH HEADER NAVBAR!) */}
           <div>
-            <h4
-              data-preview-static="footer-explore-heading"
+            <EditableText
+              as="h4"
+              fieldPath="common.footerExploreHeading"
+              defaultValue={common.footerExploreHeading ?? 'Explore'}
+              placeholder="Add a navigation heading"
+              size="0.8125rem" weight={700} transform="uppercase"
+              letterSpacing="0.08em" color="#f1f5f9"
               style={{
-                fontSize: '0.8125rem',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-                color: '#f1f5f9',
                 marginBottom: '1.25rem',
               }}
               className="text-xs font-bold uppercase tracking-wider text-slate-200 mb-5"
-            >
-              Explore
-            </h4>
+            />
 
             <ul
               style={{
@@ -476,20 +475,18 @@ export function EditableFooter({
 
           {/* Column 3: Contact & Support */}
           <div>
-            <h4
-              data-preview-static="footer-contact-heading"
+            <EditableText
+              as="h4"
+              fieldPath="common.footerContactHeading"
+              defaultValue={common.footerContactHeading ?? 'Contact & Support'}
+              placeholder="Add a contact heading"
+              size="0.8125rem" weight={700} transform="uppercase"
+              letterSpacing="0.08em" color="#f1f5f9"
               style={{
-                fontSize: '0.8125rem',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-                color: '#f1f5f9',
                 marginBottom: '1.25rem',
               }}
               className="text-xs font-bold uppercase tracking-wider text-slate-200 mb-5"
-            >
-              Contact & Support
-            </h4>
+            />
 
             <div
               style={{
@@ -503,10 +500,7 @@ export function EditableFooter({
             >
               {emailContact && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-500">
-                    <rect width="20" height="16" x="2" y="4" rx="2" />
-                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-                  </svg>
+                  <EditableIcon name="mail" fieldPath="common.footerEmailIcon" size={14} className="text-slate-500" />
                   <a href={`mailto:${emailContact}`} data-preview-field-path="contact.email" className="hover:text-white transition-colors" style={{ color: 'inherit', textDecoration: 'none' }}>
                     {emailContact}
                   </a>
@@ -515,9 +509,7 @@ export function EditableFooter({
 
               {phone && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-500">
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                  </svg>
+                  <EditableIcon name="phone" fieldPath="common.footerPhoneIcon" size={14} className="text-slate-500" />
                   <a href={`tel:${phone}`} data-preview-field-path="contact.phone" className="hover:text-white transition-colors" style={{ color: 'inherit', textDecoration: 'none' }}>
                     {phone}
                   </a>
@@ -526,10 +518,7 @@ export function EditableFooter({
 
               {address && (
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-500 mt-0.5">
-                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-                    <circle cx="12" cy="10" r="3" />
-                  </svg>
+                  <EditableIcon name="map-pin" fieldPath="common.footerLocationIcon" size={14} className="text-slate-500 mt-0.5" />
                   <span data-preview-field-path="contact.address">{address}</span>
                 </div>
               )}
@@ -597,18 +586,19 @@ export function EditableFooter({
 
             {showNewsletter && (
               <div className="flex flex-col gap-3">
-                <p
-                  data-preview-static="newsletter-description"
+                <EditableText
+                  as="p"
+                  fieldPath="common.newsletterDescription"
+                  defaultValue={common.newsletterDescription ?? 'Join our exclusive community for releases, updates, and special perks.'}
+                  placeholder="Add a newsletter description"
+                  size="0.8125rem"
+                  color="#94a3b8"
+                  lineHeight={1.5}
                   style={{
-                    fontSize: '0.8125rem',
-                    color: '#94a3b8',
-                    lineHeight: 1.5,
                     margin: 0,
                   }}
                   className="text-xs text-slate-400 leading-relaxed"
-                >
-                  Join our exclusive community for releases, updates, and special perks.
-                </p>
+                />
 
                 {subscribed ? (
                   <p
@@ -646,8 +636,8 @@ export function EditableFooter({
                       <input
                         type="email"
                         required
-                        data-preview-static="newsletter-input"
-                        placeholder="Enter your email"
+                        data-preview-field-path="common.newsletterEmailPlaceholder"
+                        placeholder={common.newsletterEmailPlaceholder ?? 'Enter your email'}
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         style={{
@@ -665,7 +655,6 @@ export function EditableFooter({
                     </div>
                     <button
                       type="submit"
-                      data-preview-static="newsletter-btn"
                       style={{
                         backgroundColor: '#ffffff',
                         color: '#0f172a',
@@ -679,8 +668,13 @@ export function EditableFooter({
                       }}
                       className="bg-white text-slate-900 hover:bg-slate-200 rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 shadow-sm"
                     >
-                      Subscribe
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <EditableText
+                        as="span"
+                        fieldPath="common.newsletterSubscribeLabel"
+                        defaultValue={common.newsletterSubscribeLabel ?? 'Subscribe'}
+                        placeholder="Subscribe"
+                      />
+                      <svg data-preview-static="newsletter-submit-arrow" aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M5 12h14M12 5l7 7-7 7" />
                       </svg>
                     </button>

@@ -52,6 +52,7 @@ export const SIDEBAR_NAV: NavSection[] = [
       { title: 'Grid & Box', href: '/docs/components/grid' },
       { title: 'Section (EditableSection)', href: '/docs/components/section', badge: 'Reorderable', isNew: true },
       { title: 'Image', href: '/docs/components/image' },
+      { title: 'Icon / EditableIcon', href: '/docs/components/editable-icon', badge: 'New', isNew: true },
     ],
   },
   {
@@ -101,6 +102,8 @@ export const SIDEBAR_NAV: NavSection[] = [
       { title: 'ProductQuickView', href: '/docs/components/product-quickview', badge: 'Modal', isNew: true },
       { title: 'ProductGrid', href: '/docs/components/product-grid', isNew: true },
       { title: 'ProductCard', href: '/docs/components/product-card' },
+      { title: 'UniversalCard', href: '/docs/components/universal-card', badge: 'New', isNew: true },
+      { title: 'VehicleCard', href: '/docs/components/vehicle-card', badge: 'Auto', isNew: true },
       { title: 'CustomerReviews', href: '/docs/components/customer-reviews', badge: 'Social', isNew: true },
       { title: 'TrustBadges', href: '/docs/components/trust-badges', badge: 'Conversion' },
       { title: 'StickyMobileBar', href: '/docs/components/sticky-mobile-bar', badge: 'Mobile' },

@@ -4,45 +4,16 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Copy, Check, Sparkles, Terminal, ShieldAlert, Cpu } from 'lucide-react';
 
-export function AiPromptClient() {
+export function AiPromptClient({ masterPrompt }: { masterPrompt: string }) {
   const [copied, setCopied] = useState(false);
-
-  const AI_MASTER_PROMPT = `# Fivora Template Master Implementation Prompt
-
-You are the implementation owner for converting the website in the current template workspace into a production-ready Fivora template. Read the complete Fivora Template Developer Guide before taking action. Inspect the whole template repository, implement every required change, validate the result, and produce a clean source ZIP.
-
-GOLDEN PLATFORM CONTRACT RULES:
-1. BasePath & Subpath Images:
-   - Next.js static exports (output: "export", unoptimized: true) DO NOT automatically prefix basePath to raw string image sources.
-   - Always wrap local static image paths in withBasePath() or use <DenebImage src="..." /> from @deneb-ui/ui.
-   - Never pass withBasePath to Next.js <Link> or router.push(); Next.js handles navigation routes automatically.
-
-2. Catalog Prices & Currency:
-   - Catalog price amounts MUST be JSON numbers (e.g., price: 1000) and editorSchema price fields MUST use type: "number".
-   - Store currency separately (e.g. currency: "LKR" or currencySymbol: "Rs."). Never store "Rs. 1000" in a numeric field.
-
-3. Live Product Detail Route:
-   - Storefronts with catalogs MUST provide src/app/products/detail/page.tsx with <PlatformProductDetail />.
-   - Product cards MUST link via platformProductDetailHref(product.id) to resolve to /products/detail/?id=PRODUCT_ID.
-
-4. Safe List Array Keys:
-   - Always provide safe fallback keys when mapping arrays: key={item.id ?? \`\${collectionName}-\${index}\`}.
-
-5. Helper Props Isolation:
-   - Never leak non-standard preview helper props (previewPath, previewItemPath) onto native DOM elements or Framer Motion tags.
-
-6. Validation & Packaging:
-   - Run "deneb doctor ." to verify all 40 diagnostics pass with 0 errors.
-   - Run "npm run verify" to validate empty-state and probe-content static fixtures.
-   - Run "deneb zip ." to package clean fivora-template.zip for marketplace upload.`;
 
   const handleCopy = async () => {
     try {
       if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(AI_MASTER_PROMPT);
+        await navigator.clipboard.writeText(masterPrompt);
       } else {
         const textArea = document.createElement('textarea');
-        textArea.value = AI_MASTER_PROMPT;
+        textArea.value = masterPrompt;
         textArea.style.position = 'fixed';
         textArea.style.left = '-999999px';
         document.body.appendChild(textArea);
@@ -111,7 +82,7 @@ GOLDEN PLATFORM CONTRACT RULES:
             </button>
           </div>
           <pre className="p-5 text-xs text-[#E2E8F0] font-mono whitespace-pre-wrap leading-relaxed overflow-x-auto max-h-[500px]">
-            {AI_MASTER_PROMPT}
+            {masterPrompt}
           </pre>
         </div>
 

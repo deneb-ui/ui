@@ -145,6 +145,10 @@ Templates MUST support both pricing formats gracefully so merchant stores never 
      "currency": "LKR",
      "compareAtPrice": 4500,
      "image": "https://images.unsplash.com/photo-1542291026-7eec264c27ff",
+     "additionalImages": [
+       "https://images.unsplash.com/photo-1543163521-1bf539c55dd2",
+       "https://images.unsplash.com/photo-1549298916-b41d501d3772"
+     ],
      "badge": "Bestseller"
    }
    ```
@@ -161,6 +165,7 @@ Templates MUST support both pricing formats gracefully so merchant stores never 
      "priceRange": "LKR 2,800 – LKR 4,800",
      "currency": "LKR",
      "image": "https://images.unsplash.com/photo-1596755094514-f87e34085b2c",
+     "additionalImages": ["https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf"],
      "badge": "New Season",
      "colors": [
        { "name": "Midnight Navy", "hex": "#0f2942", "imageUrl": "https://images.unsplash.com/photo-1596755094514-f87e34085b2c" },
@@ -180,6 +185,10 @@ Templates MUST support both pricing formats gracefully so merchant stores never 
   ```
 - **Interactive Apparel Swatches**:
   When `product.colors` is present, render round swatch circles. Clicking a swatch updates the active product photo preview immediately.
+- **Catalog Media Contract**:
+  Fivora sends `imageUrl` as the primary card image and `additionalImages` as the ordered gallery. Deneb normalizes these to `images` and `gallery` with the primary image first. Product cards show the primary image; ProductDetail, PlatformProductDetail, and ProductQuickView expose the complete gallery.
+- **Card Responsibilities**:
+  ProductCard is the commerce card, ServiceCard is the service/quote card, and UniversalCard is a generic renderer for other entity types. Keep all three components, but never create three independent product/service schemas.
 
 ---
 
@@ -1057,20 +1066,10 @@ export function MainHero() {
 ##### Props Table
 | Prop | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
-| `title` | `string` | `required` | Product name. |
-| `price` | `number` | `undefined` | Single fixed retail price (when not a range). |
-| `isPriceRange` | `boolean` | `false` | Whether product is sold in a dynamic price range. |
-| `minPrice` | `number` | `undefined` | Minimum price for price range products. |
-| `maxPrice` | `number` | `undefined` | Maximum price for price range products. |
-| `priceRange` | `string` | `undefined` | Preformatted price range string (e.g. 'LKR 2,800 – LKR 4,800'). |
-| `compareAtPrice` | `number` | `undefined` | Original price for strike-through discount. |
+| `product` | `ProductItem` | `required` | Canonical product record, including primary/gallery media, pricing, sizes, colors, and variants. |
 | `currency` | `string` | `'LKR'` | Currency symbol prefix. |
-| `image` | `string` | `required` | Product photo URL. |
-| `colors` | `Array<{ name: string; hex: string; imageUrl?: string }>` | `[]` | Interactive color swatches that swap the photo preview on click. |
-| `sizes` | `string[]` | `[]` | Available size tags. |
-| `category` | `string` | `''` | Category badge tag. |
 | `whatsappNumber` | `string` | `''` | WhatsApp merchant number for direct order. |
-| `itemPath` | `string` | `''` | Fivora visual editing marker (e.g. 'content.products.0'). |
+| `itemPath` | `string` | `required` | Fivora visual editing marker (e.g. `products[0]`). |
 
 ##### Copy-Paste Usage Example (Dual Pricing & Swatches)
 ```tsx
@@ -1081,19 +1080,8 @@ export function ProductItemView({ product, index }: { product: any; index: numbe
   return (
     <ProductCard
       itemPath={`content.products.${index}`}
-      title={product.name ?? product.title}
-      price={product.price}
-      isPriceRange={product.isPriceRange}
-      minPrice={product.minPrice}
-      maxPrice={product.maxPrice}
-      priceRange={product.priceRange}
-      compareAtPrice={product.compareAtPrice}
+      product={product}
       currency={product.currency ?? "LKR"}
-      image={product.imageUrl ?? product.image}
-      colors={product.colors}
-      sizes={product.sizes}
-      category={product.category}
-      badge={product.badge}
       whatsappNumber={siteData?.shop?.whatsapp}
     />
   );
@@ -1463,10 +1451,10 @@ export function MobileActionBar() {
 ##### Props Table
 | Prop | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
-| `title` | `string` | `required` | Service title. |
-| `price` | `number` | `required` | Starting price. |
-| `duration` | `string` | `''` | Service time duration. |
-| `description` | `string` | `''` | Service description. |
+| `service` | `ServiceItem` | `required` | Canonical service record with primary/gallery media, price label, description, and features. |
+| `itemPath` | `string` | `required` | Fivora visual editing marker (for example `services[0]`). |
+| `showPrice` | `boolean` | `true` | Allows a template to hide pricing while retaining quote behavior. |
+| `align` | `'left' \| 'center' \| 'right'` | `'left'` | Card content alignment. |
 
 ##### Copy-Paste Usage Example
 ```tsx
@@ -1475,10 +1463,16 @@ import { ServiceCard } from "@deneb-ui/ui";
 export function RestorationService() {
   return (
     <ServiceCard
-      title="Leather Conditioning & Resole"
-      price={6500}
-      duration="48 Hours"
-      description="Deep hydration with Saphir Medaille d'Or creams and Goodyear heel replacement."
+      itemPath="services[0]"
+      service={{
+        title: "Leather Conditioning & Resole",
+        price: 6500,
+        priceLabel: "from",
+        description: "Deep hydration with Saphir Medaille d'Or creams and Goodyear heel replacement.",
+        imageUrl: "/services/resole-primary.jpg",
+        additionalImages: ["/services/resole-before-after.jpg"],
+        features: ["48-hour turnaround", "Goodyear heel replacement"],
+      }}
     />
   );
 }

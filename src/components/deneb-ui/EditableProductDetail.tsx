@@ -11,6 +11,7 @@ import {
   ProductVariant,
 } from './utils/productOptions';
 import { createWhatsAppUrl } from './utils/urls';
+import { resolveCatalogImages } from './utils/catalogMedia';
 
 export interface ProductDetailItem {
   id?: string | number;
@@ -28,6 +29,7 @@ export interface ProductDetailItem {
   image?: string;
   gallery?: string[];
   images?: string[];
+  additionalImages?: string[];
   addToSelectionLabel?: string;
   specsTitle?: string;
   specs?: Array<{ label: string; value: string }>;
@@ -132,14 +134,18 @@ export function EditableProductDetail({
   const productPhoto = productRecord.photo as string | undefined;
   const productThumbnail = productRecord.thumbnail as string | undefined;
 
-  const validImages = useMemo(() => {
-    const rawList = (product.gallery && product.gallery.length > 0)
-      ? product.gallery
-      : (product.images && product.images.length > 0)
-        ? product.images
-        : [product.featuredImage || product.imageUrl || product.image || productPhoto || productThumbnail || '/products/vanta-aero-x.jpg'];
-    return (rawList as string[]).filter(Boolean);
-  }, [product.gallery, product.images, product.featuredImage, product.imageUrl, product.image, productPhoto, productThumbnail]);
+  const validImages = useMemo(
+    () =>
+      resolveCatalogImages(
+        {
+          ...product,
+          photo: productPhoto,
+          thumbnail: productThumbnail,
+        },
+        '/products/vanta-aero-x.jpg',
+      ),
+    [product, productPhoto, productThumbnail],
+  );
 
   // 2. Resolve Options (Sizes, Volumes, Weights, Counts)
   const resolved = resolveProductOptions(product);

@@ -11,6 +11,7 @@ import {
   ProductOptionInput,
 } from './utils/productOptions';
 import { platformProductDetailHref } from './PlatformProductDetail';
+import { resolveCatalogPrimaryImage } from './utils/catalogMedia';
 
 const COLOR_HEX_MAP: Record<string, string> = {
   black: '#111827',
@@ -75,6 +76,7 @@ export interface ProductItem {
   productImage?: string;
   gallery?: string[];
   images?: string[];
+  additionalImages?: string[];
   badge?: string;
   tag?: string;
   rating?: number | string;
@@ -393,15 +395,7 @@ export function EditableProductCard({
 
   const fallbackImage =
     imageFallback || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80';
-  const rawImage =
-    product?.imageUrl ||
-    product?.image ||
-    (product as any)?.photo ||
-    (product as any)?.thumbnail ||
-    (product as any)?.productImage ||
-    (Array.isArray(product?.gallery) && product.gallery[0]) ||
-    (Array.isArray(product?.images) && product.images[0]);
-  const baseImageUrl = String(rawImage || fallbackImage);
+  const baseImageUrl = resolveCatalogPrimaryImage(product, fallbackImage);
 
   // Active image: clicked color image -> resolved variant image -> product base image
   const currentImage = colorImage || resolvedPrice.variantImage || baseImageUrl;

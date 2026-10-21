@@ -1,5 +1,6 @@
 import React from 'react';
 import { useFieldStyle } from './SiteDataProvider';
+import { useComponentStyle } from './hooks/useComponentStyle';
 
 export type BoxRadius = 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full' | (string & {}) | number;
 export type BoxShadow = 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | (string & {});
@@ -63,6 +64,8 @@ const ASPECT_MAP: Record<string, string> = {
 
 export interface EditableBoxProps extends React.HTMLAttributes<HTMLElement> {
   as?: React.ElementType;
+  /** Independent container style target; does not mark child content as one text field. */
+  stylePath?: string;
 
   /**
    * Field path or item path in siteData.
@@ -119,6 +122,7 @@ export interface EditableBoxProps extends React.HTMLAttributes<HTMLElement> {
  */
 export function EditableBox({
   as: Component = 'div',
+  stylePath,
   id,
   'data-preview-field-path': previewFieldPath,
   'data-preview-item-path': previewItemPath,
@@ -186,6 +190,24 @@ export function EditableBox({
       : undefined;
 
   const path = previewFieldPath || id || previewItemPath;
+  const effectiveStylePath = stylePath ?? path;
+  const { cssVars } = useComponentStyle(effectiveStylePath, 'card');
+  const variables = cssVars as Record<string, string>;
+  const containerStyle: React.CSSProperties = {};
+  // Only set persisted values: unedited CSS classes and existing props keep their defaults.
+  const bindings = {
+    backgroundColor: '--deneb-card-bg',
+    paddingTop: '--deneb-card-pt', paddingBottom: '--deneb-card-pb',
+    paddingLeft: '--deneb-card-pl', paddingRight: '--deneb-card-pr',
+    marginTop: '--deneb-card-margin-top', marginBottom: '--deneb-card-margin-bottom',
+    marginLeft: '--deneb-card-margin-left', marginRight: '--deneb-card-margin-right',
+    gap: '--deneb-card-gap',
+  } as const;
+  for (const [property, variable] of Object.entries(bindings)) {
+    if (variables[variable] !== undefined) {
+      Object.assign(containerStyle, { [property]: `var(${variable})` });
+    }
+  }
   const dynamicStyle = useFieldStyle(path);
   const dynamicMarginTop = dynamicStyle?.spacingTop !== undefined && dynamicStyle?.spacingTop !== '' ? `${dynamicStyle.spacingTop}px` : undefined;
   const dynamicMarginBottom = dynamicStyle?.spacingBottom !== undefined && dynamicStyle?.spacingBottom !== '' ? `${dynamicStyle.spacingBottom}px` : undefined;
@@ -223,6 +245,8 @@ export function EditableBox({
     ...(dynamicMarginLeft ? { marginLeft: dynamicMarginLeft } : {}),
     ...(dynamicMarginRight ? { marginRight: dynamicMarginRight } : {}),
     ...(dynamicStyle?.color ? { color: String(dynamicStyle.color) } : {}),
+    ...cssVars,
+    ...containerStyle,
   };
 
   return (
@@ -230,6 +254,8 @@ export function EditableBox({
       data-preview-field-path={previewFieldPath || id}
       data-preview-item-path={previewItemPath}
       data-preview-static={previewStatic}
+      data-preview-style-target={effectiveStylePath}
+      data-preview-style-type={effectiveStylePath ? 'card' : undefined}
       className={`editable-box ${className}`.trim()}
       style={boxStyle}
       {...(props as any)}

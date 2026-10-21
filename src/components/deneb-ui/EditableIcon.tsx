@@ -725,7 +725,7 @@ export const EditableIcon: React.FC<EditableIconProps> = ({
   // 3. Built-in SVG lookup
   const renderer = BUILTIN_ICONS[normalized] || BUILTIN_ICONS[fallback] || BUILTIN_ICONS.circle;
 
-  return (
+  const svg = (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
@@ -745,17 +745,27 @@ export const EditableIcon: React.FC<EditableIconProps> = ({
       }}
       aria-hidden={!title}
       role={title ? 'img' : undefined}
-      {...(fieldPath ? {
-        'data-preview-field-path': fieldPath,
-        'data-preview-control': 'icon-picker',
-        'data-preview-icon-type': 'lucide',
-        'data-preview-icon': activeName,
-      } : {})}
       {...svgProps}
     >
       {title && <title>{title}</title>}
       {renderer({ strokeWidth })}
     </svg>
+  );
+
+  if (!fieldPath) return svg;
+
+  // Match the HTML selection target used by customIcon/iconMap above.
+  // SVG descendants bubble into this target even in HTMLElement-only bridges.
+  return (
+    <span
+      data-preview-field-path={fieldPath}
+      data-preview-control="icon-picker"
+      data-preview-icon-type="lucide"
+      data-preview-icon={activeName}
+      style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0, lineHeight: 1 }}
+    >
+      {svg}
+    </span>
   );
 };
 
