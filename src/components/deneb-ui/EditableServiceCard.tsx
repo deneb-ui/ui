@@ -27,6 +27,12 @@ export interface ServiceItem {
   images?: string[];
   additionalImages?: string[];
   features?: unknown[];
+  badge?: string;
+  tag?: string;
+  isActive?: boolean;
+  active?: boolean;
+  isAvailable?: boolean;
+  available?: boolean;
   [key: string]: unknown;
 }
 
@@ -57,6 +63,10 @@ export interface EditableServiceCardProps extends React.HTMLAttributes<HTMLEleme
   align?: 'left' | 'center' | 'right';
   showPrice?: boolean;
   /**
+   * Whether to show active/inactive status badge (default: true).
+   */
+  showStatusBadge?: boolean;
+  /**
    * Currency code override (e.g. "LKR", "USD"). If omitted, auto-resolves from live shop profile.
    */
   currency?: string;
@@ -73,12 +83,20 @@ export function EditableServiceCard({
   as: Component = 'article',
   align = 'left',
   showPrice = true,
+  showStatusBadge = true,
   currency: currencyOverride,
   className = '',
   style,
   children,
   ...props
 }: EditableServiceCardProps) {
+  const isServiceActive =
+    service?.isActive !== false &&
+    service?.active !== false &&
+    service?.isAvailable !== false &&
+    service?.available !== false;
+  const badgeCandidate = service?.badge || service?.tag;
+
   const name = String(service?.name || service?.title || '');
   const description = String(service?.description || '');
   const itemShowPrice =
@@ -105,24 +123,102 @@ export function EditableServiceCard({
         : currency + ' ' + String(rawPriceCandidate)
     : '';
 
+  const rawCompareCandidate = service?.compareAtPrice || service?.originalPrice;
+  const hasComparePrice =
+    effectiveShowPrice &&
+    rawCompareCandidate !== undefined &&
+    rawCompareCandidate !== null &&
+    String(rawCompareCandidate).trim() !== '' &&
+    Number(rawCompareCandidate) > Number(rawPriceCandidate);
+
+  const formattedComparePrice = hasComparePrice
+    ? typeof rawCompareCandidate === 'number'
+      ? currency + ' ' + rawCompareCandidate.toLocaleString()
+      : String(rawCompareCandidate).match(/^[A-Z]{3}\s/) || String(rawCompareCandidate).includes(currency)
+        ? String(rawCompareCandidate)
+        : currency + ' ' + String(rawCompareCandidate)
+    : '';
+
   const serviceImages = resolveCatalogImages(service);
   const imageUrl = serviceImages[0] || '';
   const features = Array.isArray(service?.features) ? service.features : [];
 
   const mergedStyle: React.CSSProperties = {
     textAlign: align,
+    opacity: !isServiceActive ? 0.72 : 1,
     ...style,
   };
+
+  const badgeElement = (badgeCandidate || (!isServiceActive && showStatusBadge)) ? (
+    <div
+      className="service-card-badge-wrap"
+      style={{
+        position: 'absolute',
+        top: '0.75rem',
+        left: '0.75rem',
+        zIndex: 3,
+        display: 'flex',
+        gap: '0.375rem',
+        pointerEvents: 'none',
+      }}
+    >
+      {!isServiceActive && showStatusBadge ? (
+        <span
+          className="service-card-status-badge inactive"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.25rem',
+            padding: '0.25rem 0.625rem',
+            borderRadius: '9999px',
+            fontSize: '0.6875rem',
+            fontWeight: 700,
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+            backgroundColor: 'rgba(239, 68, 68, 0.95)',
+            color: '#ffffff',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.15)',
+          }}
+        >
+          <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: 'currentColor' }} />
+          Unavailable
+        </span>
+      ) : badgeCandidate ? (
+        <EditableText
+          as="span"
+          id={`${itemPath}.badge`}
+          data-preview-field-path={`${itemPath}.badge`}
+          defaultValue={String(badgeCandidate)}
+          className="service-card-badge"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            padding: '0.25rem 0.625rem',
+            borderRadius: '9999px',
+            fontSize: '0.6875rem',
+            fontWeight: 700,
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+            backgroundColor: 'var(--brand-color, #2563eb)',
+            color: '#ffffff',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.15)',
+            pointerEvents: 'auto',
+          }}
+        />
+      ) : null}
+    </div>
+  ) : null;
 
   return (
     <Component
       data-preview-item-path={itemPath}
-      className={`editable-service-card ${className}`.trim()}
+      className={`editable-service-card ${!isServiceActive ? 'is-inactive is-unavailable' : ''} ${className}`.trim()}
       style={mergedStyle}
       {...(props as any)}
     >
-      {(imageUrl || service?.imageUrl !== undefined || service?.image !== undefined) && (
-        <div className="service-card-image-wrap">
+      {(imageUrl || service?.imageUrl !== undefined || service?.image !== undefined) ? (
+        <div className="service-card-image-wrap" style={{ position: 'relative' }}>
+          {badgeElement}
           <EditableImage
             id={`${itemPath}.imageUrl`}
             data-preview-field-path={`${itemPath}.imageUrl`}
@@ -132,7 +228,11 @@ export function EditableServiceCard({
             className="service-card-image"
           />
         </div>
-      )}
+      ) : badgeElement ? (
+        <div style={{ position: 'relative', width: '100%', height: '1.75rem', marginBottom: '0.5rem' }}>
+          {badgeElement}
+        </div>
+      ) : null}
 
       <div className="service-card-body">
         <EditableText
@@ -152,7 +252,7 @@ export function EditableServiceCard({
         />
 
         {hasPrice ? (
-          <div className="service-card-price-wrap" style={{ margin: '0.5rem 0', display: 'flex', alignItems: 'baseline', gap: '0.375rem', flexWrap: 'wrap' }}>
+          <div className="service-card-price-wrap" style={{ margin: '0.5rem 0', display: 'flex', alignItems: 'baseline', gap: '0.5rem', flexWrap: 'wrap' }}>
             {hasRawPrice && (
               <EditableText
                 as="span"
@@ -166,6 +266,19 @@ export function EditableServiceCard({
                   color: 'var(--brand-color, #2563eb)',
                 }}
               />
+            )}
+            {hasComparePrice && (
+              <span
+                className="service-card-compare-price"
+                style={{
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  color: 'var(--muted-text, #94a3b8)',
+                  textDecoration: 'line-through',
+                }}
+              >
+                {formattedComparePrice}
+              </span>
             )}
             {priceLabel && (
               <EditableText
@@ -182,19 +295,20 @@ export function EditableServiceCard({
               />
             )}
           </div>
-        ) : !effectiveShowPrice ? (
+        ) : (!effectiveShowPrice || (!hasRawPrice && !priceLabel)) ? (
           <div className="service-card-price-wrap" style={{ margin: '0.5rem 0' }}>
             <span
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                padding: '3px 8px',
-                borderRadius: '6px',
-                fontSize: '0.75rem',
+                padding: '4px 10px',
+                borderRadius: '8px',
+                fontSize: '0.8125rem',
                 fontWeight: 600,
                 backgroundColor: 'rgba(255, 255, 255, 0.08)',
                 color: 'var(--muted-text, #94a3b8)',
                 border: '1px solid rgba(255, 255, 255, 0.12)',
+                letterSpacing: '0.01em',
               }}
             >
               Quote on Request

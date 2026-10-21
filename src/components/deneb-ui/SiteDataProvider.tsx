@@ -1068,6 +1068,33 @@ export function normalizeProductItem(p: unknown): ProductItem {
   const explicitRange = p.priceRange ?? customData.priceRange;
   const isRange = Boolean(p.isPriceRange || customData.isPriceRange || (explicitMax && explicitMin));
 
+  const isAvailableCandidate =
+    p.isAvailable !== undefined
+      ? Boolean(p.isAvailable)
+      : p.available !== undefined
+        ? Boolean(p.available)
+        : p.inStock !== undefined
+          ? Boolean(p.inStock)
+          : customData.isAvailable !== undefined
+            ? Boolean(customData.isAvailable)
+            : true;
+
+  const isActiveCandidate =
+    p.isActive !== undefined
+      ? Boolean(p.isActive)
+      : p.active !== undefined
+        ? Boolean(p.active)
+        : customData.isActive !== undefined
+          ? Boolean(customData.isActive)
+          : true;
+
+  const showPriceCandidate =
+    p.showPrice !== undefined
+      ? Boolean(p.showPrice)
+      : customData.showPrice !== undefined
+        ? Boolean(customData.showPrice)
+        : true;
+
   return {
     ...customData,
     ...p,
@@ -1075,6 +1102,12 @@ export function normalizeProductItem(p: unknown): ProductItem {
     title: titleCandidate as string | undefined,
     productName: (titleCandidate ?? nameCandidate) as string | undefined,
     itemTitle: (titleCandidate ?? nameCandidate) as string | undefined,
+    isAvailable: isAvailableCandidate,
+    inStock: isAvailableCandidate,
+    available: isAvailableCandidate,
+    isActive: isActiveCandidate,
+    active: isActiveCandidate,
+    showPrice: showPriceCandidate,
     minPrice: explicitMin !== undefined ? explicitMin : undefined,
     priceMin: (explicitMin ?? p.priceMin) !== undefined ? (explicitMin ?? p.priceMin) : undefined,
     maxPrice: explicitMax !== undefined ? explicitMax : undefined,
@@ -1207,13 +1240,43 @@ export function normalizeServiceItem(s: unknown): ServiceItem {
 
   const priceLabelCandidate = s.priceLabel ?? customData.priceLabel;
 
+  const isActiveCandidate =
+    s.isActive !== undefined
+      ? Boolean(s.isActive)
+      : s.active !== undefined
+        ? Boolean(s.active)
+        : s.isAvailable !== undefined
+          ? Boolean(s.isAvailable)
+          : s.available !== undefined
+            ? Boolean(s.available)
+            : customData.isActive !== undefined
+              ? Boolean(customData.isActive)
+              : customData.isAvailable !== undefined
+                ? Boolean(customData.isAvailable)
+                : true;
+
+  const showPriceCandidate =
+    s.showPrice !== undefined
+      ? Boolean(s.showPrice)
+      : customData.showPrice !== undefined
+        ? Boolean(customData.showPrice)
+        : true;
+
+  const badgeCandidate = s.badge ?? s.tag ?? s.label ?? customData.badge ?? customData.tag;
+
   return {
     ...customData,
     ...s,
     name: nameCandidate as string | undefined,
     title: titleCandidate as string | undefined,
+    isActive: isActiveCandidate,
+    active: isActiveCandidate,
+    isAvailable: isActiveCandidate,
+    available: isActiveCandidate,
+    showPrice: showPriceCandidate,
     ...(descCandidate !== undefined ? { description: descCandidate as string, desc: descCandidate as string, details: descCandidate as string } : {}),
     ...(imageCandidate !== undefined ? { imageUrl: imageCandidate as string, image: imageCandidate as string, photo: imageCandidate as string } : {}),
+    ...(badgeCandidate !== undefined ? { badge: String(badgeCandidate), tag: String(badgeCandidate) } : {}),
     ...(catalogImages.length > 0
       ? {
           gallery: catalogImages,
@@ -1241,7 +1304,12 @@ export function normalizeServiceItem(s: unknown): ServiceItem {
   } as ServiceItem;
 }
 
-export function useProducts(fallback: ProductItem[] = []): ProductItem[] {
+export interface UseProductsOptions {
+  inStockOnly?: boolean;
+  activeOnly?: boolean;
+}
+
+export function useProducts(fallback: ProductItem[] = [], options?: UseProductsOptions): ProductItem[] {
   const siteData = useSiteData();
   const content = isRecord(siteData?.content) ? (siteData.content as Record<string, unknown>) : null;
   if (!content) return fallback;
@@ -1269,18 +1337,31 @@ export function useProducts(fallback: ProductItem[] = []): ProductItem[] {
 
   if (!rawList) return fallback;
 
-  return rawList.map(normalizeProductItem);
+  let list = rawList.map(normalizeProductItem);
+  if (options?.activeOnly) {
+    list = list.filter((p) => p.isActive !== false && (p as any).status !== 'ARCHIVED' && (p as any).status !== 'DRAFT');
+  }
+  if (options?.inStockOnly) {
+    list = list.filter((p) => p.isAvailable !== false && p.inStock !== false);
+  }
+  return list;
+}
+
+export interface UseServicesOptions {
+  activeOnly?: boolean;
 }
 
 /**
  * Hook to retrieve services cleanly from SiteData, supporting both
  * top-level content.services and nested content.home.services.
+ * Supports optional { activeOnly: true } filtering to mirror product availability.
  */
-export function useServices(fallback: ServiceItem[] = []): ServiceItem[] {
+export function useServices(fallback: ServiceItem[] = [], options?: UseServicesOptions): ServiceItem[] {
   const siteData = useSiteData();
   const content = isRecord(siteData?.content) ? (siteData.content as Record<string, unknown>) : null;
   if (!content) return fallback;
 
+  let rawList: unknown[] | null = null;
   const candidates: unknown[] = [
     content.services,
     (content.servicesPage as Record<string, unknown> | undefined)?.services,
@@ -1292,11 +1373,16 @@ export function useServices(fallback: ServiceItem[] = []): ServiceItem[] {
 
   for (const candidate of candidates) {
     if (Array.isArray(candidate) && candidate.length > 0) {
-      return (candidate as unknown[]).map(normalizeServiceItem);
+      rawList = candidate as unknown[];
+      break;
     }
   }
 
-  return fallback;
+  const list = rawList ? (rawList as unknown[]).map(normalizeServiceItem) : fallback;
+  if (options?.activeOnly) {
+    return list.filter((s) => s.isActive !== false && s.isAvailable !== false);
+  }
+  return list;
 }
 
 /**

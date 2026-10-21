@@ -84,6 +84,14 @@ export interface ProductItem {
   isNew?: boolean;
   isBestSeller?: boolean;
 
+  // Availability & Publishing Status
+  isAvailable?: boolean;
+  inStock?: boolean;
+  available?: boolean;
+  isActive?: boolean;
+  active?: boolean;
+  status?: string;
+
   // WhatsApp & CTA custom bindings per product
   whatsappNumber?: string;
   whatsappButtonText?: string;
@@ -916,7 +924,7 @@ export function EditableProductCard({
                 />
               ) : null}
             </div>
-          ) : !effectiveShowPrice ? (
+          ) : (!effectiveShowPrice || !hasPrice) ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <span
                 style={{
